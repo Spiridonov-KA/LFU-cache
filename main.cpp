@@ -1,8 +1,27 @@
+#include <cassert>
 #include <iostream>
 
 #include "cache.hpp"
 
+// slow get page imitation
+int slow_get_page_int(int key) { return key; }
+
 int main() {
-    std::cout << "Hello, World!" << std::endl;
-    print();
+  int hits = 0;
+  int n;
+  size_t m;
+
+  std::cin >> m >> n;
+  assert(std::cin.good());
+  caches::cache_t<int> c{m};
+
+  for (int i = 0; i < n; ++i) {
+    int q;
+    std::cin >> q;
+    assert(std::cin.good());
+    if (c.lookup_update(q, slow_get_page_int))
+      hits += 1;
+  }
+
+  std::cout << hits << std::endl;
 }
