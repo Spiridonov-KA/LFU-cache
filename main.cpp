@@ -1,3 +1,9 @@
+//-----------------------------------------------------------------------------
+//
+//  LFU cache in C++: simple driver program
+//
+//----------------------------------------------------------------------------
+
 #include <cassert>
 #include <iostream>
 
@@ -12,13 +18,13 @@ int main() {
   size_t m;
 
   std::cin >> m >> n;
-  assert(std::cin.good());
+  // assert(std::cin.good());
   caches::cache_t<int> c{m};
 
   for (int i = 0; i < n; ++i) {
     int q;
     std::cin >> q;
-    assert(std::cin.good());
+    // assert(std::cin.good());
     if (c.lookup_update(q, slow_get_page_int))
       hits += 1;
   }

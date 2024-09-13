@@ -7,14 +7,10 @@
 #pragma once
 
 #include <iostream>
-#include <iterator>
 #include <list>
-#include <queue>
 #include <set>
-#include <string>
 #include <unordered_map>
 #include <unordered_set>
-#include <vector>
 
 namespace caches {
 
@@ -71,7 +67,6 @@ private:
 
     void cache_hit(KeyT key) {
         auto it = hash_.find(key);
-        std::cout << (*it).second->second;
         cache_hits_.erase((*it).second->second);
         cnt_hash_[(*it).second->second].erase(key);
         ++(*it).second->second;
