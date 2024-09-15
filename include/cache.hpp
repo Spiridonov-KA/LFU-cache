@@ -7,7 +7,9 @@
 #pragma once
 
 #include <iostream>
+#include <limits>
 #include <list>
+#include <queue>
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
@@ -72,6 +74,84 @@ private:
         ++(*it).second->second;
         cnt_hash_[(*it).second->second].insert(key);
         cache_hits_.insert((*it).second->second);
+    }
+};
+
+template<typename T, typename KeyT = int>
+class perfect_cache_t {
+private:
+    using ListIt = typename std::list<T>::iterator;
+    std::unordered_map<KeyT, ListIt> hash_;
+    std::vector<KeyT> queries_;
+    std::unordered_map<KeyT, std::queue<size_t>> keys_pos_;
+    std::list<T> cache_;
+    size_t hits_ = 0;
+    size_t sz_ = 0;
+public:
+    perfect_cache_t(size_t sz, std::vector<KeyT> &queries) : sz_(sz), queries_(queries) {
+        for (size_t i = 0; i < queries_.size(); ++i) {
+            keys_pos_[queries_[i]].push(i);
+        }
+    }
+
+    bool full() const { return (cache_.size() == sz_); }
+
+    template<typename F>
+    size_t count_hits(F slow_get_page) {
+        for (size_t i = 0; i < queries_.size(); ++i) {
+            hits_ += lookup_update(queries_[i], slow_get_page);
+        }
+        return hits_;
+    }
+
+    template<typename F>
+    bool lookup_update(KeyT key, F slow_get_page) {
+        auto hit = hash_.find(key);
+        if (hit == hash_.end()) {
+            if (full()) {
+                remove_elem_from_cache();
+            }
+            add_elem_to_cache(key, slow_get_page);
+            return false;
+        }
+        cache_hit(key);
+        return true;
+    }
+
+    KeyT find_farthest_key() {
+        size_t farthest = 0;
+        KeyT key;
+        for (auto it : keys_pos_) {
+            if (!it.second.empty()) {
+                if (it.second.front() > farthest) {
+                    farthest = it.second.front();
+                    it.second.pop();
+                    key = it.first;
+                }
+            }
+            else {
+                key = it.first;
+                return key;
+            }
+        }
+        return key;
+    }
+
+    void remove_elem_from_cache() {
+        KeyT key = find_farthest_key();
+        cache_.erase(hash_[key]);
+        hash_.erase(key);
+    }
+
+    template<typename F> 
+    void add_elem_to_cache(KeyT key, F slow_get_page) {
+        cache_.emplace_front(slow_get_page(key));
+        hash_.emplace(key, cache_.begin());
+        keys_pos_[key].pop();
+    }
+
+    void cache_hit(KeyT key) {
+        keys_pos_[key].pop();
     }
 };
 

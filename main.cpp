@@ -20,14 +20,26 @@ int main() {
   std::cin >> m >> n;
   // assert(std::cin.good());
   caches::cache_t<int> c{m};
+  std::vector<int> queries(n);
+
+  for (int i = 0; i < n; ++i) {
+    std::cin >> queries[i];
+  }
 
   for (int i = 0; i < n; ++i) {
     int q;
-    std::cin >> q;
+    // std::cin >> q;
     // assert(std::cin.good());
+    q = queries[i];
     if (c.lookup_update(q, slow_get_page_int))
       hits += 1;
   }
+
+#ifdef PERFECT_CACHE
+  caches::perfect_cache_t<int> p_c{m, queries};
+  std::cout << p_c.count_hits(slow_get_page_int) << '\n';
+#endif
+
 
   std::cout << hits << std::endl;
 }
