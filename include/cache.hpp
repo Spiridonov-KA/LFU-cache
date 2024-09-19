@@ -62,12 +62,14 @@ private:
         // Минимальное кол-во hit'ов в кэше
         size_t min_hits = *min_hits_iter;
         // Ключ элемента, который имеет минимальное кол-во hit'ов
+        assert(elems_with_this_hit[min_hits].size() > 0);
         KeyT key = *(elems_with_this_hit[min_hits].begin());
         // Удаляем этот ключ из elems_with_this_hit
         elems_with_this_hit[min_hits].erase(elems_with_this_hit[min_hits].begin());
         // Уменьшаем минимальное кол-во hit'ов на единицу
         all_hits.erase(min_hits_iter);
         // Удаляем элемент с ключом key из кэша
+        assert(hash_.find(key) != hash_.end());
         cache_.erase(hash_[key]);
         // Удаляем элемент с ключом key из хэша
         hash_.erase(key);
