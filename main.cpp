@@ -31,13 +31,21 @@ int main() {
     // std::cin >> q;
     // assert(std::cin.good());
     q = queries[i];
-    if (c.lookup_update(q, slow_get_page_int))
+    if (c.lookup_update(q, slow_get_page_int)) {
       hits += 1;
+#ifdef DEBUG_INFO
+      std::cout << "was hit in" << std::endl;
+#endif
+    }
+#ifdef DEBUG_INFO
+    std::cout << q << ' ' << i << '\n';
+    c.print_cache();
+#endif
   }
 
 #ifdef PERFECT_CACHE
   caches::perfect_cache_t<int> p_c{m, queries};
-  std::cout << p_c.count_hits(slow_get_page_int) << '\n';
+  std::cout << "Perfect cache hits: " << p_c.count_hits(slow_get_page_int) << '\n';
 #endif
 
 

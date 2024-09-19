@@ -27,8 +27,8 @@ private:
     using ListIt = typename std::list<std::pair<T, size_t>>::iterator;
     std::unordered_map<KeyT, ListIt> hash_;
     std::list<std::pair<T, size_t>> cache_;
-    std::unordered_map<size_t, std::unordered_set<KeyT>> cnt_hash_;
-    std::multiset<size_t> cache_hits_;
+    std::unordered_map<size_t, std::unordered_set<KeyT>> elems_with_this_hit;
+    std::multiset<size_t> all_hits;
 
 public:
     cache_t(size_t sz) : sz_(sz) {}
@@ -48,14 +48,28 @@ public:
         cache_hit(key);
         return true;
     }
+
+    void print_cache() const {
+        for (auto it : cache_) {
+            std::cout << it.first << ' ';
+        }
+        std::cout << std::endl;
+    }
 private:
     void remove_elem_from_cache() {
-        auto min_hits_iter = cache_hits_.begin();
+        // Итератор на значение елемента с минимальным hit'ом
+        auto min_hits_iter = all_hits.begin();
+        // Минимальное кол-во hit'ов в кэше
         size_t min_hits = *min_hits_iter;
-        KeyT key = *(cnt_hash_[min_hits].begin());
-        cnt_hash_.erase(cnt_hash_.begin());
-        cache_hits_.erase(min_hits_iter);
+        // Ключ элемента, который имеет минимальное кол-во hit'ов
+        KeyT key = *(elems_with_this_hit[min_hits].begin());
+        // Удаляем этот ключ из elems_with_this_hit
+        elems_with_this_hit[min_hits].erase(elems_with_this_hit[min_hits].begin());
+        // Уменьшаем минимальное кол-во hit'ов на единицу
+        all_hits.erase(min_hits_iter);
+        // Удаляем элемент с ключом key из кэша
         cache_.erase(hash_[key]);
+        // Удаляем элемент с ключом key из хэша
         hash_.erase(key);
     }
 
@@ -63,28 +77,32 @@ private:
     void add_elem_to_cache(KeyT key, F slow_get_page) {
         cache_.emplace_front(slow_get_page(key), 0);
         hash_.emplace(key, cache_.begin());
-        cache_hits_.insert(NEW_ELEM);
-        cnt_hash_[NEW_ELEM].insert(key);
+        all_hits.insert(NEW_ELEM);
+        elems_with_this_hit[NEW_ELEM].insert(key);
     }
 
     void cache_hit(KeyT key) {
         auto it = hash_.find(key);
-        cache_hits_.erase((*it).second->second);
-        cnt_hash_[(*it).second->second].erase(key);
+        assert(it != hash_.end());
+        all_hits.extract((*it).second->second);
+        assert(elems_with_this_hit[(*it).second->second].count(key) == 1);
+        elems_with_this_hit[(*it).second->second].erase(key);
         ++(*it).second->second;
-        cnt_hash_[(*it).second->second].insert(key);
-        cache_hits_.insert((*it).second->second);
+        assert(elems_with_this_hit[(*it).second->second].count(key) == 0);
+        elems_with_this_hit[(*it).second->second].insert(key);
+        all_hits.insert((*it).second->second);
     }
+
 };
 
 template<typename T, typename KeyT = int>
 class perfect_cache_t {
 private:
-    using ListIt = typename std::list<T>::iterator;
+    using ListIt = typename std::list<std::pair<KeyT, T>>::iterator;
     std::unordered_map<KeyT, ListIt> hash_;
     std::vector<KeyT> queries_;
     std::unordered_map<KeyT, std::queue<size_t>> keys_pos_;
-    std::list<T> cache_;
+    std::list<std::pair<KeyT, T>> cache_;
     size_t hits_ = 0;
     size_t sz_ = 0;
 public:
@@ -99,14 +117,17 @@ public:
     template<typename F>
     size_t count_hits(F slow_get_page) {
         for (size_t i = 0; i < queries_.size(); ++i) {
-            hits_ += lookup_update(queries_[i], slow_get_page);
+            hits_ += lookup_update(queries_[i], slow_get_page, i);
         }
         return hits_;
     }
 
     template<typename F>
-    bool lookup_update(KeyT key, F slow_get_page) {
+    bool lookup_update(KeyT key, F slow_get_page, int idx) {
         auto hit = hash_.find(key);
+        if (!keys_pos_[key].empty() and keys_pos_[key].front() == idx ) {
+            keys_pos_[key].pop();
+        }
         if (hit == hash_.end()) {
             if (full()) {
                 remove_elem_from_cache();
@@ -114,27 +135,27 @@ public:
             add_elem_to_cache(key, slow_get_page);
             return false;
         }
-        cache_hit(key);
         return true;
     }
 
     KeyT find_farthest_key() {
         size_t farthest = 0;
-        KeyT key;
-        for (auto it : keys_pos_) {
-            if (!it.second.empty()) {
-                if (it.second.front() > farthest) {
-                    farthest = it.second.front();
-                    it.second.pop();
-                    key = it.first;
+        KeyT ans_key;
+        for (auto it : cache_) {
+            auto curr_key = it.first;
+            if (!keys_pos_[curr_key].empty()) {
+                if (keys_pos_[curr_key].front() > farthest) {
+                    farthest = keys_pos_[curr_key].front();
+                    ans_key = it.first;
                 }
             }
             else {
-                key = it.first;
-                return key;
+                ans_key = it.first;
+                return ans_key;
             }
         }
-        return key;
+        keys_pos_[ans_key].pop();
+        return ans_key;
     }
 
     void remove_elem_from_cache() {
@@ -145,9 +166,9 @@ public:
 
     template<typename F> 
     void add_elem_to_cache(KeyT key, F slow_get_page) {
-        cache_.emplace_front(slow_get_page(key));
+        cache_.emplace_front(key, slow_get_page(key));
         hash_.emplace(key, cache_.begin());
-        keys_pos_[key].pop();
+        // keys_pos_[key].pop();
     }
 
     void cache_hit(KeyT key) {
