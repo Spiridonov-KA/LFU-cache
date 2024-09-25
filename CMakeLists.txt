@@ -7,14 +7,14 @@
 
 # The command to compile the LFU cache
 # rm -rf build
-# cmake -DCMAKE_BUILD_TYPE=Release -DLFU_CACHE_RESULT -S . -B build 
+# cmake -DCMAKE_BUILD_TYPE=Release -DLFU_CACHE_RESULT=ON -S . -B build 
 # cmake --build ./build
 # env CTEST_OUTPUT_ON_FAILURE=1 cmake --build build --target test
 
 
 # The command to compile the perfect cache
 # rm -rf build
-# cmake -DCMAKE_BUILD_TYPE=Release -DPERFECT_CACHE_RESULT -S . -B build 
+# cmake -DCMAKE_BUILD_TYPE=Release -DPERFECT_CACHE_RESULT=ON -S . -B build 
 # cmake --build ./build
 # env CTEST_OUTPUT_ON_FAILURE=1 cmake --build build --target test
 
