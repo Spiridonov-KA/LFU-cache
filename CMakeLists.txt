@@ -32,7 +32,8 @@ option(PERFECT_CACHE_RESULT "performance perfect cache" OFF)
 option(LFU_CACHE_RESULT "performance LFU cache" OFF)
 
 set(SRCS 
-    source/cache.cpp
+    source/perfect_cache.cpp
+    source/LFU_cache.cpp
 )
 
 set(TESTS ${CMAKE_SOURCE_DIR}/tests)
