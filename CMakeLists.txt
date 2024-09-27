@@ -20,9 +20,6 @@ enable_testing()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(PERFECT_CACHE_RESULT "performance perfect cache" OFF)
-option(LFU_CACHE_RESULT "performance LFU cache" OFF)
-
 set(SRCS 
     source/perfect_cache.cpp
     source/LFU_cache.cpp
