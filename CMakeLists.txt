@@ -5,16 +5,8 @@
 #------------------------------------------------------------------------------
 
 
-# The command to compile the LFU cache
 # rm -rf build
-# cmake -DCMAKE_BUILD_TYPE=Release -DLFU_CACHE_RESULT=ON -S . -B build 
-# cmake --build ./build
-# env CTEST_OUTPUT_ON_FAILURE=1 cmake --build build --target test
-
-
-# The command to compile the perfect cache
-# rm -rf build
-# cmake -DCMAKE_BUILD_TYPE=Release -DPERFECT_CACHE_RESULT=ON -S . -B build 
+# cmake -DCMAKE_BUILD_TYPE=Release -S . -B build 
 # cmake --build ./build
 # env CTEST_OUTPUT_ON_FAILURE=1 cmake --build build --target test
 
@@ -38,37 +30,29 @@ set(SRCS
 
 set(TESTS ${CMAKE_SOURCE_DIR}/tests)
 
-set(EXECUTABLE_FILE main)
+set(EXECUTABLE_FILE_LFU_CACHE main_LFU_cache)
+set(EXECUTABLE_FILE_PERFECT_CACHE main_perfect_cache)
 set(BUILD_FOLDER build)
 
 add_library(cachelib STATIC ${SRCS})
 target_include_directories(cachelib PUBLIC include)
 
-add_executable(${EXECUTABLE_FILE} main.cpp)
-target_link_libraries(${EXECUTABLE_FILE} PUBLIC cachelib)
+add_executable(${EXECUTABLE_FILE_LFU_CACHE} main_LFU_cache.cpp)
+target_link_libraries(${EXECUTABLE_FILE_LFU_CACHE} PUBLIC cachelib)
 
-function(run_tests path_to_tests)
+add_executable(${EXECUTABLE_FILE_PERFECT_CACHE} main_perfect_cache.cpp)
+target_link_libraries(${EXECUTABLE_FILE_PERFECT_CACHE} PUBLIC cachelib)
+
+function(run_tests path_to_tests exe_file)
     file(GLOB testfiles "${path_to_tests}/*.dat")
     foreach(file ${testfiles})
         add_test(
                 NAME ${file}
-                COMMAND bash -c "${CMAKE_SOURCE_DIR}/runtest.sh ${file} ./main"
+                COMMAND bash -c "${CMAKE_SOURCE_DIR}/runtest.sh ${file} ./${exe_file}"
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-        set_tests_properties(${file} PROPERTIES DEPENDS ${EXECUTABLE_FILE})
+        set_tests_properties(${file} PROPERTIES DEPENDS ${exe_file})
     endforeach()
 endfunction()
 
-
-if (PERFECT_CACHE_RESULT STREQUAL "ON")
-    add_definitions(-DPERFECT_CACHE_RESULT)
-    message(STATUS "Perfect cache was chosen")
-    target_compile_definitions(${EXECUTABLE_FILE} PRIVATE PERFECT_CACHE)
-    run_tests("tests/perfect_cache")
-endif()
-
-if (LFU_CACHE_RESULT STREQUAL "ON")
-    add_definitions(-DLFU_CACHE_RESULT)
-    message(STATUS "LFU cache was chosen")
-    target_compile_definitions(${EXECUTABLE_FILE} PRIVATE PERFECT_CACHE)
-    run_tests("tests/LFU_cache")
-endif()
+run_tests("tests/LFU_cache" ${EXECUTABLE_FILE_LFU_CACHE})
+run_tests("tests/perfect_cache" ${EXECUTABLE_FILE_PERFECT_CACHE})
