@@ -26,7 +26,7 @@ public:
         }
     }
 
-    bool full() const { return (cache_.size() == sz_); }
+    bool full() const { return (cache_.size() == sz_ + 1); }
 
     template<typename F>
     size_t count_hits(F slow_get_page) {
@@ -49,10 +49,10 @@ public:
             keys_pos_[key].pop();
         }
         if (hit == hash_.end()) {
+            add_elem_to_cache(key, slow_get_page);
             if (full()) {
                 remove_elem_from_cache();
             }
-            add_elem_to_cache(key, slow_get_page);
             return false;
         }
         return true;
@@ -92,6 +92,7 @@ public:
     void add_elem_to_cache(KeyT key, F slow_get_page) {
         cache_.emplace_front(key, slow_get_page(key));
         hash_.emplace(key, cache_.begin());
+        assert(cache_.size() <= sz_ + 1);
     }
 };
 }
