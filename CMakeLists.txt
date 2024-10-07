@@ -20,25 +20,17 @@ enable_testing()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(SRCS 
-    source/perfect_cache.cpp
-    source/LFU_cache.cpp
-)
-
 set(TESTS ${CMAKE_SOURCE_DIR}/tests)
 
 set(EXECUTABLE_FILE_LFU_CACHE main_LFU_cache)
 set(EXECUTABLE_FILE_PERFECT_CACHE main_perfect_cache)
 set(BUILD_FOLDER build)
 
-add_library(cachelib STATIC ${SRCS})
-target_include_directories(cachelib PUBLIC include)
-
 add_executable(${EXECUTABLE_FILE_LFU_CACHE} main_LFU_cache.cpp)
-target_link_libraries(${EXECUTABLE_FILE_LFU_CACHE} PUBLIC cachelib)
+target_include_directories(${EXECUTABLE_FILE_LFU_CACHE} PUBLIC include)
 
 add_executable(${EXECUTABLE_FILE_PERFECT_CACHE} main_perfect_cache.cpp)
-target_link_libraries(${EXECUTABLE_FILE_PERFECT_CACHE} PUBLIC cachelib)
+target_include_directories(${EXECUTABLE_FILE_PERFECT_CACHE} PUBLIC include)
 
 function(run_tests path_to_tests exe_file)
     file(GLOB testfiles "${path_to_tests}/*.dat")
