@@ -27,8 +27,8 @@ private:
     using ListIt = typename std::list<std::pair<T, size_t>>::iterator;
     std::unordered_map<KeyT, ListIt> hash_;
     std::list<std::pair<T, size_t>> cache_;
-    std::unordered_map<size_t, std::unordered_set<KeyT>> elems_with_this_hit;
-    std::multiset<size_t> all_hits;
+    // std::unordered_map<size_t, std::unordered_set<KeyT>> elems_with_this_hit;
+    std::multiset<std::pair<size_t, KeyT>> all_hits;
 
 public:
     cache_t(size_t sz) : sz_(sz) {}
@@ -44,12 +44,14 @@ public:
     // cache and false is returned
     template <typename F> 
     bool lookup_update(KeyT key, F slow_get_page) {
+		if (sz_ == 0) return false;
         auto hit = hash_.find(key);
         if (hit == hash_.end()) {
             if (full()) {
                 remove_elem_from_cache();
             }
             add_elem_to_cache(key, slow_get_page);
+            assert(hash_.size() <= sz_ and cache_.size() <= sz_ and all_hits.size() <= sz_);
             return false;
         }
         cache_hit(key);
@@ -68,12 +70,8 @@ private:
         // Iterator to the value of the element with the minimum hit
         auto min_hits_iter = all_hits.begin();
         // Minimum number of hits in the cache
-        size_t min_hits = *min_hits_iter;
-        // The key of the element that has the minimum number of hits
-        assert(elems_with_this_hit[min_hits].size() > 0);
-        KeyT key = *(elems_with_this_hit[min_hits].begin());
-        // Removing this key from elems_with_this_hit
-        elems_with_this_hit[min_hits].erase(elems_with_this_hit[min_hits].begin());
+        size_t min_hits = (*min_hits_iter).first;
+        KeyT key = (*min_hits_iter).second;
         // Reducing the minimum number of hits by one
         all_hits.erase(min_hits_iter);
         // Deleting the element with the key "key" from the cache
@@ -89,23 +87,18 @@ private:
     void add_elem_to_cache(KeyT key, F slow_get_page) {
         cache_.emplace_front(slow_get_page(key), 0);
         hash_.emplace(key, cache_.begin());
-        all_hits.insert(NEW_ELEM);
-        elems_with_this_hit[NEW_ELEM].insert(key);
+        all_hits.insert({NEW_ELEM, key});
     }
 
     // Increases the hit counter of the element
-    void cache_hit(KeyT key) {
+    void cache_hit(KeyT &key) {
         auto it = hash_.find(key);
         assert(it != hash_.end());
-        all_hits.extract((*it).second->second);
-        assert(elems_with_this_hit[(*it).second->second].count(key) == 1);
-        elems_with_this_hit[(*it).second->second].erase(key);
-        ++(*it).second->second;
-        assert(elems_with_this_hit[(*it).second->second].count(key) == 0);
-        elems_with_this_hit[(*it).second->second].insert(key);
-        all_hits.insert((*it).second->second);
+        size_t &n_hits = (*it).second->second;
+        all_hits.extract({n_hits, key});
+        ++n_hits;
+        all_hits.insert({n_hits, key});
     }
-
 };
 
 }

@@ -22,7 +22,7 @@ int main() {
     const int max_val = 1000000000;
     if (std::cin.fail() or (m < 0 or m > fix_size) or (n < 0 or n > fix_size)) {
         std::cout << "Incorrect input. "
-        "The first line should contain two integers m and n (1 <= m <= 1e7 and 0 <= n <= 1e7).\n"
+        "The first line should contain two integers m and n (0 <= m <= 1e7 and 0 <= n <= 1e7).\n"
         "Where m is the size of cache and n is a number of elements that will try to cache.";
         return 1;
     }
