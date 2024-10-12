@@ -94,7 +94,7 @@ private:
     void cache_hit(KeyT &key) {
         auto it = hash_.find(key);
         assert(it != hash_.end());
-        size_t &n_hits = (*it).second->second;
+        size_t n_hits = (*it).second->second;
         all_hits.extract({n_hits, key});
         ++n_hits;
         all_hits.insert({n_hits, key});
